@@ -76,16 +76,16 @@ async def convert(bot, update):
     if os.path.exists(saved_file_path):
         commands = update.command
         cmd = commands
-            o = await convert_video(saved_file_path, Config.DOWNLOAD_LOCATION)
-            logger.info(o)
-            if o is not None:
-                await bot.edit_message_text(
+        o = await convert_video(saved_file_path, Config.DOWNLOAD_LOCATION)
+        logger.info(o)
+        if o is not None:
+            await bot.edit_message_text(
                     chat_id=update.chat.id,
                     text=Translation.UPLOAD_START,
                     message_id=a.message_id
                 )
-                c_time = time.time()
-                await bot.send_video(
+            c_time = time.time()
+            await bot.send_video(
                     chat_id=update.chat.id,
                     video=o,
                     # caption=description,
@@ -101,16 +101,16 @@ async def convert(bot, update):
                         Translation.UPLOAD_START,
                         a,
                         c_time
-                    )
-                )
-                os.remove(o)
-                await bot.edit_message_text(
+                      )
+                  )
+            os.remove(o)
+            await bot.edit_message_text(
                     chat_id=update.chat.id,
                     text=Translation.AFTER_SUCCESSFUL_UPLOAD_MSG,
                     disable_web_page_preview=True,
                     message_id=a.message_id
-                )
-            except:
+                    )
+        except:
                 os.remove(o)
     except:
         os.remove(saved_file_path)
