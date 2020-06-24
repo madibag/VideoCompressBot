@@ -110,5 +110,3 @@ async def convert(bot, update):
                     disable_web_page_preview=True,
                     message_id=a.message_id
                     )
-    except:
-        os.remove(saved_file_path)
