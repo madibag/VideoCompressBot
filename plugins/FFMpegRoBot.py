@@ -111,6 +111,6 @@ async def convert(bot, update):
                     message_id=a.message_id
                     )
         except:
-                os.remove(o)
+            os.remove(o)
     except:
         os.remove(saved_file_path)
