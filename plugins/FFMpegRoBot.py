@@ -103,10 +103,10 @@ async def convert(bot, update):
                         c_time
                       )
                   )
-            os.remove(o)
             await bot.edit_message_text(
                     chat_id=update.chat.id,
                     text=Translation.AFTER_SUCCESSFUL_UPLOAD_MSG,
                     disable_web_page_preview=True,
                     message_id=a.message_id
                     )
+    os.remove(o) 
