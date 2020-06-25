@@ -61,6 +61,7 @@ async def convert(bot, update):
                 text=str(e),
                 message_id=a.message_id
             )
+            os.remove(saved_file_path)
         else:
             await bot.edit_message_text(
                 chat_id=update.chat.id,
@@ -102,11 +103,13 @@ async def convert(bot, update):
                         a,
                         c_time
                       )
-                  )
+              )
+            
+            os.remove(saved_file_path)
+            
             await bot.edit_message_text(
                     chat_id=update.chat.id,
                     text=Translation.AFTER_SUCCESSFUL_UPLOAD_MSG,
                     disable_web_page_preview=True,
                     message_id=a.message_id
                     )
-    os.remove(o) 
