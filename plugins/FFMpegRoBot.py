@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# (c) Shrimadhav U K
+# (c) Madiba E T
 
 # the logging things
 import logging
@@ -13,8 +13,8 @@ import time
 import aiohttp
 
 # the secret configuration specific things
-if bool(os.environ.get("WEBHOOK", False)):
-    from sample_config import Config
+if bool(os.environ.get("ENV", False)):
+    from config import Config
 else:
     from sample_config import Config
 
@@ -32,23 +32,24 @@ from hachoir.parser import createParser
 
 
 
-@pyrogram.Client.on_message(pyrogram.Filters.command(["convert"]))
+@pyrogram.Client.on_message(pyrogram.filters.command(["compress"]))
 async def convert(bot, update):
+
     if update.from_user.id not in Config.AUTH_USERS:
         await update.message.delete()
         return
-    saved_file_path = Config.DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + ".FFMpegRoBot.mkv"
+    saved_file_path = Config.DOWNLOAD_LOCATION + "/" + str(round(time.time())) + ".FFMpegRoBot.mkv"
     if not os.path.exists(saved_file_path):
         a = await bot.send_message(
             chat_id=update.chat.id,
             text=Translation.DOWNLOAD_START,
             reply_to_message_id=update.message_id
         )
-        try:
+        """try:
             c_time = time.time()
-            if update.reply_to_message.startswith("http"):
+            if update.reply_to_message..startswith("http"):
                 async with aiohttp.ClientSession() as session:
-                    c_time = time.time()
+                    
                     try:
                         await dl.download_coroutine(
                             bot,
@@ -68,7 +69,15 @@ async def convert(bot, update):
                         return False
 
 
-            await bot.download_media(
+            
+        except (ValueError) as e:
+            await bot.edit_message_text(
+                chat_id=update.chat.id,
+                text=str(e),
+                message_id=a.message_id
+            )"""
+        c_time = time.time()
+        await bot.download_media(
                 message=update.reply_to_message,
                 file_name=saved_file_path,
                 progress=progress_for_pyrogram,
@@ -78,19 +87,12 @@ async def convert(bot, update):
                     c_time
                 )
             )
-        except (ValueError) as e:
-            await bot.edit_message_text(
-                chat_id=update.chat.id,
-                text=str(e),
-                message_id=a.message_id
-            )
-            os.remove(saved_file_path)
-        else:
-            await bot.edit_message_text(
-                chat_id=update.chat.id,
-                text=Translation.SAVED_RECVD_DOC_FILE,
-                message_id=a.message_id
-            )
+        #else:
+        await bot.edit_message_text(
+            chat_id=update.chat.id,
+            text=Translation.SAVED_RECVD_DOC_FILE,
+            message_id=a.message_id
+        )
     else:
         await bot.send_message(
             chat_id=update.chat.id,
@@ -101,36 +103,56 @@ async def convert(bot, update):
         commands = update.command
         cmd = commands
         inline_keyboard = []
-        HHD = [pyrogram.InlineKeyboardButton(
-                                    "Resoulution 1080P:"+"1920x1080",
-                                    callback_data=("1920:1080").encode("UTF-8")
+        HHD = [pyrogram.types.InlineKeyboardButton(
+                                    text="Resoulution 1080P:",
+                                    callback_data=("1080").encode("UTF-8")
                                 )]
-        HD = [pyrogram.InlineKeyboardButton(
-                                    "Resoulution 720P:"+"1280x720",
-                                    callback_data=("1280x720").encode("UTF-8")
+        HD = [pyrogram.types.InlineKeyboardButton(
+                                    "Resoulution 720P:",
+                                    callback_data=("720").encode("UTF-8")
                                 )]
-        SSD = [pyrogram.InlineKeyboardButton(
-                                    "Resoulution 480P:"+"854x480",
-                                    callback_data=("854:480").encode("UTF-8")
+        SSD = [pyrogram.types.InlineKeyboardButton(
+                                    "Resoulution 480P:",
+                                    callback_data=("480").encode("UTF-8")
                                 )]
-        SD = [pyrogram.InlineKeyboardButton(
-                                    "Resoulution :"+"640x360",
-                                    callback_data=("640:360").encode("UTF-8")
+        SD = [pyrogram.types.InlineKeyboardButton(
+                                    "Resoulution 360p:",
+                                    callback_data=("360").encode("UTF-8")
                                 )]
         inline_keyboard.append(HHD)
         inline_keyboard.append(HD)
         inline_keyboard.append(SSD)
         inline_keyboard.append(SD)
 
+        reply_markup = pyrogram.types.InlineKeyboardMarkup(inline_keyboard)
+
+        await bot.send_message(
+            chat_id=update.chat.id,
+            text=Translation.FORMAT_SELECTION.format(""),
+            reply_markup=reply_markup,
+            parse_mode="html",
+            reply_to_message_id=update.message_id
+        )
+
+@pyrogram.Client.on_callback_query()
 async def call_back(bot, update):
+    saved_file_path = Config.DOWNLOAD_LOCATION + "/" + str(update.from_user.id) + ".FFMpegRoBot.mkv"
     Data = update.data
+    a=update.message
+
+    await bot.edit_message_text(
+                chat_id=update.from_user.id,
+                text="The video is being compressed please wait a little bit...",
+                message_id=a.message_id
+            )
+
     o = await convert_video(saved_file_path, Config.DOWNLOAD_LOCATION,Data)
 
-                    
+    #print(update)              
     if os.path.exists(o):
         width = 0
         height = 0
-        metadata = extractMetadata(createParser(o))
+        metadata = extractMetadata(createParser(saved_file_path))
         if metadata.has("width"):
             width = metadata.get("width")
         if metadata.has("height"):
@@ -138,13 +160,13 @@ async def call_back(bot, update):
     logger.info(o)
     if o is not None:
         await bot.edit_message_text(
-                chat_id=update.chat.id,
+                chat_id=update.from_user.id,
                 text=Translation.UPLOAD_START,
                 message_id=a.message_id
             )
         c_time = time.time()
         await bot.send_video(
-                    chat_id=update.chat.id,
+                    chat_id=update.from_user.id,
                     video=o,
                     # caption=description,
                     # duration=duration,
@@ -153,7 +175,7 @@ async def call_back(bot, update):
                     supports_streaming=True,
                     # reply_markup=reply_markup,
                     # thumb=thumb_image_path,
-                    reply_to_message_id=update.message_id,
+                    reply_to_message_id=update.message.message_id,
                     progress=progress_for_pyrogram,
                     progress_args=(
                         Translation.UPLOAD_START,
@@ -165,7 +187,7 @@ async def call_back(bot, update):
         os.remove(saved_file_path)
             
         await bot.edit_message_text(
-                    chat_id=update.chat.id,
+                    chat_id=update.from_user.id,
                     text=Translation.AFTER_SUCCESSFUL_UPLOAD_MSG,
                     disable_web_page_preview=True,
                     message_id=a.message_id
