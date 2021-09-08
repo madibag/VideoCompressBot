@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# (c) Shrimadhav U K
+# (c) Madiba E T
 
 # the logging things
 import logging
@@ -18,10 +18,12 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
 
-async def convert_video(video_file, output_directory):
+async def convert_video(video_file, output_directory,Data):
     # https://stackoverflow.com/a/13891070/4723940
-    out_put_file_name = output_directory + \
-        "/" + str(round(time.time())) + ".mp4"
+
+    #https://superuser.com/questions/714804/converting-video-from-1080p-to-720p-with-smallest-quality-loss-using-ffmpeg
+
+    out_put_file_name = output_directory + "/" + str(round(time.time())) + ".mkv"
     file_genertor_command = [
         "ffmpeg",
         "-i",
@@ -30,6 +32,8 @@ async def convert_video(video_file, output_directory):
         "libx265",
         "-c:a",
         "copy",
+        "-vf",
+        f"scale=-1:{Data}",
         "-async",
         "1",
         "-strict",
@@ -46,9 +50,14 @@ async def convert_video(video_file, output_directory):
     stdout, stderr = await process.communicate()
     e_response = stderr.decode().strip()
     t_response = stdout.decode().strip()
+
+    process.terminate()
+
+    #os.remove(video_file)
     if os.path.lexists(out_put_file_name):
         return out_put_file_name
     else:
+        print(e_response)
         return None
 
 
